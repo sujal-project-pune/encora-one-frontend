@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, AlertCircle, CheckCircle, Plus, CheckSquare, MessageSquare, LogOut, Search, Filter } from 'lucide-react';
+import { FileText, AlertCircle, CheckCircle, Plus, CheckSquare, MessageSquare, LogOut, Search, Filter, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import Sidebar from '../components/layout/Sidebar';
 import StatusBadge from '../components/ui/StatusBadge';
 import CreateComplaintModal from '../components/modals/CreateComplaintModal';
 import UpdateStatusModal from '../components/modals/UpdateStatusModal';
+import ViewComplaintModal from '../components/modals/ViewComplaintModal'; // Import the new modal
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
+    
+    // Modal States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false); // New State
+    
     const [selectedComplaint, setSelectedComplaint] = useState(null);
     const [complaints, setComplaints] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    
-    // NEW: State for Status Filter
     const [statusFilter, setStatusFilter] = useState('All');
 
     const isManager = user?.role === 'Manager';
@@ -30,7 +33,6 @@ const Dashboard = () => {
         try {
             let endpoint = '/Complaint/my-complaints';
 
-            // Admin sees ALL, Manager sees Department, Employee sees Own
             if (isAdmin) {
                 endpoint = '/Complaint/all';
             } else if (isManager) {
@@ -50,24 +52,27 @@ const Dashboard = () => {
     }, [user]);
 
     const handleAction = () => {
-        fetchComplaints(); // Refresh data
+        fetchComplaints();
     };
 
+    // Handler for Manager Update (Review)
     const openUpdateModal = (c) => {
         setSelectedComplaint(c);
         setIsUpdateModalOpen(true);
     };
 
-    // UPDATED: Filter Logic (Search + Status)
+    // Handler for View Details
+    const openViewModal = (c) => {
+        setSelectedComplaint(c);
+        setIsViewModalOpen(true);
+    };
+
     const filteredComplaints = complaints.filter(c => {
-        // 1. Search Filter
         const matchesSearch = 
             c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             c.complaintId.toString().includes(searchTerm);
 
-        // 2. Status Filter
-        // Normalize strings to handle "In Progress" vs "InProgress" discrepancies
         const normalize = (str) => str?.replace(/\s/g, '').toLowerCase() || '';
         const matchesStatus = statusFilter === 'All' || normalize(c.status) === normalize(statusFilter);
 
@@ -78,9 +83,7 @@ const Dashboard = () => {
         <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} complaintCount={complaints.length} />
 
-            {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                {/* Mobile Header */}
                 <header className="lg:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-10">
                     <div className="font-bold text-lg text-slate-800">EncoraOne</div>
                     <button onClick={logout}><LogOut className="w-5 h-5 text-slate-600" /></button>
@@ -142,7 +145,6 @@ const Dashboard = () => {
                                         )}
                                     </header>
 
-                                    {/* UPDATED: Filter & Search Bar */}
                                     <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-2">
                                         <div className="relative flex-1">
                                             <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
@@ -191,6 +193,17 @@ const Dashboard = () => {
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <StatusBadge status={c.status} />
+                                                            
+                                                            {/* View Details Button (Visible to All) */}
+                                                            <button 
+                                                                onClick={() => openViewModal(c)} 
+                                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="View Details"
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </button>
+
+                                                            {/* Update Button (Manager/Admin Only) */}
                                                             {canManage && (
                                                                 <button onClick={() => openUpdateModal(c)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-1">
                                                                     <CheckSquare className="w-4 h-4" /> Review
@@ -221,6 +234,7 @@ const Dashboard = () => {
             
             <CreateComplaintModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onComplaintCreated={handleAction} />
             <UpdateStatusModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} complaint={selectedComplaint} onUpdate={handleAction} />
+            <ViewComplaintModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} complaint={selectedComplaint} />
         </div>
     );
 };
