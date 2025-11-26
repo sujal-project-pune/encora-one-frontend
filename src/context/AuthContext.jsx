@@ -56,7 +56,9 @@ export const AuthProvider = ({ children }) => {
                 email: decoded.email,
                 fullName: decoded.fullName || decoded.unique_name,
                 role: Array.isArray(decoded.role) ? decoded.role[0] : decoded.role,
-                deptId: decoded.DepartmentId ? parseInt(decoded.DepartmentId) : null
+                deptId: decoded.DepartmentId ? parseInt(decoded.DepartmentId) : null,
+                // ✨ FIX 2: Assuming the JWT claim is 'JobTitle'
+                jobTitle: decoded.JobTitle || null 
             };
 
             setUser(restoredUser);
@@ -79,7 +81,9 @@ export const AuthProvider = ({ children }) => {
                 email: data.email,
                 fullName: data.fullName,
                 role: data.role,
-                deptId: data.departmentId
+                deptId: data.departmentId,
+                // ✨ FIX 1: Assuming the API response property is 'JobTitle'
+                jobTitle: data.JobTitle 
             };
 
             // Save token + full user object
