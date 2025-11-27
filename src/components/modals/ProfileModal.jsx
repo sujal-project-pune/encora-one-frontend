@@ -1,99 +1,111 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Shield, Building2, Hash } from 'lucide-react';
+import { X, User, Mail, BadgeCheck } from 'lucide-react';
 
 const ProfileModal = ({ isOpen, onClose, user }) => {
-    if (!user) return null;
+    
+    // 💡 Logic to remove the Dept ID from the display string.
+    const getDepartmentDisplay = (user) => {
+        if (!user || !user.role) {
+            return "N/A";
+        }
+        
+        if (user.role === 'Admin') {
+            return 'Central Administration';
+        }
+        
+        if (user.role === 'Manager') {
+            return 'Managerial Role';
+        }
+        
+        return 'Employee Department';
+    };
 
-    // Get initials for avatar
-    const initials = user.fullName
-        ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-        : 'U';
+    const departmentDisplay = getDepartmentDisplay(user);
 
+    // Animation variants
+    const overlayVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opacity: 0 } };
+    const modalVariants = {
+        hidden: { opacity: 0, scale: 0.9, y: 20 },
+        visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", damping: 25, stiffness: 300 } },
+        exit: { opacity: 0, scale: 0.95, y: 20 }
+    };
+
+    // Using Portal to ensure it covers the full screen (z-index fix)
     return ReactDOM.createPortal(
         <AnimatePresence>
             {isOpen && (
-                <>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     {/* Backdrop */}
-                    <motion.div 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
-                        exit={{ opacity: 0 }} 
-                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100]" 
-                        onClick={onClose} 
+                    <motion.div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                        variants={overlayVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        onClick={onClose}
                     />
-                    
-                    {/* Modal Content */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-                        animate={{ opacity: 1, scale: 1, y: 0 }} 
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-                        className="fixed inset-0 flex items-center justify-center z-[101] p-4 pointer-events-none"
+
+                    {/* Modal Card */}
+                    <motion.div
+                        className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative z-10"
+                        variants={modalVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
                     >
-                        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden pointer-events-auto relative">
-                            
-                            {/* Header Background Pattern */}
-                            <div className="h-24  relative">
-                                <button 
-                                    onClick={onClose} 
-                                    className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/20 text-white rounded-full transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                        {/* Header with background gradient */}
+                        <div className="h-24 bg-gradient-to-r from-violet-600 to-fuchsia-600 relative">
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 p-1 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Avatar & Content */}
+                        <div className="px-6 pb-8 -mt-10 relative">
+                            {/* Profile Image Circle */}
+                            <div className="w-20 h-20 bg-slate-800 rounded-full p-1.5 ring-4 ring-slate-900 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                                <div className="w-full h-full bg-slate-700 rounded-full flex items-center justify-center">
+                                    <User className="w-10 h-10 text-slate-300" />
+                                </div>
                             </div>
 
-                            {/* Profile Content */}
-                            <div className="px-6 pb-8 -mt-12 text-center">
-                                {/* Avatar */}
-                                <div className="w-24 h-24 mx-auto bg-white p-1.5 rounded-full shadow-lg mb-4">
-                                    <div className="w-full h-full bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-2xl font-bold border border-slate-200">
-                                        {initials}
+                            <div className="text-center mb-6">
+                                <h2 className="text-2xl font-bold text-white">{user?.fullName || "User Name"}</h2>
+                                <span className="inline-block mt-1 px-3 py-1 bg-violet-500/10 text-violet-400 text-xs font-semibold rounded-full border border-violet-500/20">
+                                    {user?.role || "Employee"}
+                                </span>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div className="space-y-4">
+                                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4">
+                                    <div className="p-2 bg-slate-700/50 rounded-lg">
+                                        <Mail className="w-5 h-5 text-violet-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Email Address</p>
+                                        <p className="text-slate-200 font-medium">{user?.email || "user@encora.com"}</p>
                                     </div>
                                 </div>
-
-                                <h2 className="text-2xl font-bold text-slate-800 mb-1">{user.fullName}</h2>
-                                <p className="text-slate-500 text-sm mb-6">{user.email}</p>
-
-                                {/* Details Grid */}
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4 text-left">
-                                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 last:border-0 last:pb-0">
-                                        <div className="flex items-center gap-3 text-slate-600">
-                                            <Shield className="w-4 h-4 text-violet-500" />
-                                            <span className="text-sm font-medium">Role</span>
-                                        </div>
-                                        <span className="px-2.5 py-1 bg-violet-100 text-violet-700 text-xs font-bold rounded-lg uppercase tracking-wide">
-                                            {user.role}
-                                        </span>
+                                
+                                <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4">
+                                    <div className="p-2 bg-slate-700/50 rounded-lg">
+                                        <BadgeCheck className="w-5 h-5 text-emerald-400" />
                                     </div>
-
-                                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 last:border-0 last:pb-0">
-                                        <div className="flex items-center gap-3 text-slate-600">
-                                            <Hash className="w-4 h-4 text-blue-500" />
-                                            <span className="text-sm font-medium">User ID</span>
-                                        </div>
-                                        <span className="text-sm font-mono text-slate-800">
-                                            {user.id}
-                                        </span>
+                                    <div>
+                                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Department</p>
+                                        <p className="text-slate-200 font-medium">{departmentDisplay}</p>
                                     </div>
-
-                                    {/* Only show Department if available (Managers/Admins often have this) */}
-                                    {user.deptId && (
-                                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 last:border-0 last:pb-0">
-                                            <div className="flex items-center gap-3 text-slate-600">
-                                                <Building2 className="w-4 h-4 text-emerald-500" />
-                                                <span className="text-sm font-medium">Department ID</span>
-                                            </div>
-                                            <span className="text-sm font-bold text-slate-800">
-                                                {user.deptId}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
                     </motion.div>
-                </>
+                </div>
             )}
         </AnimatePresence>,
         document.body
