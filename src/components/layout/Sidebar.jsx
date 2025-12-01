@@ -5,7 +5,8 @@ import {
     LayoutDashboard,
     User,
     LogOut,
-    List
+    List,
+    Building2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import ProfileModal from '../modals/ProfileModal.jsx';
@@ -90,12 +91,20 @@ const Sidebar = () => {
                         </NavLink>
                     )}
 
-                    {/* Admin Management Link (Visible to Admin only) */}
+
+                    
                     {isAdmin && (
-                        <NavLink to="/admin" className={linkClass}>
-                            <User className="w-5 h-5" />
-                            <span className="font-medium">User Management</span>
-                        </NavLink>
+                        <>
+                            <NavLink to="/admin" className={linkClass}>
+                                <User className="w-5 h-5" />
+                                <span className="font-medium">User Management</span>
+                            </NavLink>
+                            {/* NEW: Departments Link */}
+                            <NavLink to="/departments" className={linkClass}>
+                                <Building2 className="w-5 h-5" />
+                                <span className="font-medium">Departments</span>
+                            </NavLink>
+                        </>
                     )}
                 </nav>
 

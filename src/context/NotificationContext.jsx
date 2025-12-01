@@ -1,29 +1,24 @@
 import React, { createContext, useEffect, useState, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
+import api from '../api/axios.js'; // Explicit extension
 
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
-    // Stores notifications for the history panel
     const [notifications, setNotifications] = useState([]);
-    // Stores active toasts (auto-dismissing)
     const [toasts, setToasts] = useState([]);
-    // Unread count for the badge
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
-        // Create Connection
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("https://localhost:7001/notificationHub")
             .withAutomaticReconnect()
             .build();
 
-        // Start Connection
         connection.start()
             .then(() => console.log("SignalR Connected"))
             .catch(err => console.error("SignalR Connection Error: ", err));
 
-        // Listen for Messages
         connection.on("ReceiveNotification", (message) => {
             const newNotification = {
                 id: Date.now(),
@@ -32,14 +27,13 @@ export const NotificationProvider = ({ children }) => {
                 read: false
             };
             
-            // Add to History
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
 
-            // Add to Toast (Auto-dismiss logic)
-            setToasts(prev => [newNotification, ...prev]);
+            const newToast = { ...newNotification };
+            setToasts(prev => [newToast, ...prev]);
             setTimeout(() => {
-                removeToast(newNotification.id);
+                removeToast(newToast.id);
             }, 5000);
         });
 
@@ -52,9 +46,35 @@ export const NotificationProvider = ({ children }) => {
         setToasts(prev => prev.filter(n => n.id !== id));
     };
 
+    const addToast = (message) => {
+        const newToast = {
+            id: Date.now(),
+            message: message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setToasts(prev => [newToast, ...prev]);
+        setTimeout(() => removeToast(newToast.id), 5000);
+    };
+
     const markAllAsRead = () => {
         setUnreadCount(0);
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    };
+
+    // NEW: Mark specific complaint notifications as read
+    const markComplaintAsRead = (complaintId) => {
+        setNotifications(prev => {
+            const updated = prev.map(n => {
+                // Match by explicit ID (if available in future) or parse from string
+                const isMatch = (n.complaintId === complaintId) || 
+                                (typeof n.message === 'string' && n.message.includes(`#${complaintId}`));
+                return isMatch ? { ...n, read: true } : n;
+            });
+            
+            // Recalculate unread count
+            setUnreadCount(updated.filter(n => !n.read).length);
+            return updated;
+        });
     };
 
     const clearNotifications = () => {
@@ -67,8 +87,10 @@ export const NotificationProvider = ({ children }) => {
             notifications, 
             toasts, 
             unreadCount, 
+            addToast, 
             removeToast, 
             markAllAsRead, 
+            markComplaintAsRead, // Expose new function
             clearNotifications 
         }}>
             {children}

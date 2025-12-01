@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNotification } from '../../context/NotificationContext';
+import { useNotification } from '../../context/NotificationContext.jsx';
 
 const NotificationPanel = () => {
     const { notifications, unreadCount, markAllAsRead, clearNotifications } = useNotification();
@@ -47,7 +47,7 @@ const NotificationPanel = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        // FIX: Changed bottom-full to top-full, left-0 to right-0, and origin to top-right
+                        // Opens downwards, anchored to right
                         className="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 origin-top-right"
                     >
                         {/* Header */}

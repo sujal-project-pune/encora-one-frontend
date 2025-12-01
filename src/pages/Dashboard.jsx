@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FileText, AlertCircle, CheckCircle, Plus, CheckSquare, MessageSquare, Search, Filter, Eye, Pencil, Trash2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
-import StatusBadge from '../components/ui/StatusBadge';
-import CreateComplaintModal from '../components/modals/CreateComplaintModal';
-import EditComplaintModal from '../components/modals/EditComplaintModal';
-import UpdateStatusModal from '../components/modals/UpdateStatusModal';
-import ViewComplaintModal from '../components/modals/ViewComplaintModal';
-import DeleteConfirmationModal from '../components/modals/DeleteConfirmationModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FileText, AlertCircle, CheckCircle, Plus, CheckSquare, MessageSquare, Search, Filter, Eye, Pencil, Trash2, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+import api from '../api/axios.js';
+import Sidebar from '../components/layout/Sidebar.jsx';
+import StatusBadge from '../components/ui/StatusBadge.jsx';
+import CreateComplaintModal from '../components/modals/CreateComplaintModal.jsx';
+import EditComplaintModal from '../components/modals/EditComplaintModal.jsx';
+import UpdateStatusModal from '../components/modals/UpdateStatusModal.jsx';
+import ViewComplaintModal from '../components/modals/ViewComplaintModal.jsx';
+import DeleteConfirmationModal from '../components/modals/DeleteConfirmationModal.jsx';
+// Import hook and destructure new function
+import { useNotification } from '../context/NotificationContext.jsx';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
+    // Get markComplaintAsRead from context
+    const { notifications, markComplaintAsRead } = useNotification();
+    
+    const [activeTab, setActiveTab] = useState('overview');
     
     // Modal States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -46,7 +54,9 @@ const Dashboard = () => {
             }
 
             const res = await api.get(endpoint);
-            setComplaints(res.data);
+            // Sort by Date (Newest First)
+            const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setComplaints(sorted);
         } catch (error) {
             console.error("Failed to load complaints", error);
         }
@@ -59,10 +69,27 @@ const Dashboard = () => {
     const handleAction = () => fetchComplaints();
 
     // Handlers
-    const openUpdateModal = (c) => { setSelectedComplaint(c); setIsUpdateModalOpen(true); };
-    const openViewModal = (c) => { setSelectedComplaint(c); setIsViewModalOpen(true); };
-    const openEditModal = (c) => { setSelectedComplaint(c); setIsEditModalOpen(true); };
-    const initiateCancel = (id) => { setComplaintToDelete(id); setIsDeleteModalOpen(true); };
+    const openUpdateModal = (c) => { 
+        markComplaintAsRead(c.complaintId); // Remove glow on review
+        setSelectedComplaint(c); 
+        setIsUpdateModalOpen(true); 
+    };
+    
+    const openViewModal = (c) => { 
+        markComplaintAsRead(c.complaintId); // Remove glow on view
+        setSelectedComplaint(c); 
+        setIsViewModalOpen(true); 
+    };
+    
+    const openEditModal = (c) => { 
+        setSelectedComplaint(c); 
+        setIsEditModalOpen(true); 
+    };
+    
+    const initiateCancel = (id) => { 
+        setComplaintToDelete(id); 
+        setIsDeleteModalOpen(true); 
+    };
 
     const confirmDelete = async () => {
         if (!complaintToDelete) return;
@@ -91,7 +118,16 @@ const Dashboard = () => {
         return matchesSearch && matchesStatus;
     });
 
-    // Calculate Stats for Overview Section
+    // Helper to check for unread messages in notifications
+    const hasUnreadActivity = (complaintId) => {
+        return notifications.some(n => {
+            if (n.read) return false;
+            // Check if notification explicitly has ID, OR parse it from message string "Complaint #101"
+            const idMatch = n.complaintId === complaintId || (n.message && n.message.includes(`#${complaintId}`));
+            return idMatch;
+        });
+    };
+
     const stats = [
         { label: 'Total', val: complaints.length, color: 'blue', icon: FileText },
         { label: 'Pending', val: complaints.filter(c => c.status === 'Pending').length, color: 'orange', icon: AlertCircle },
@@ -100,7 +136,7 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-8">
-            {/* SECTION 1: OVERVIEW & STATS */}
+            {/* OVERVIEW SECTION */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
@@ -131,14 +167,13 @@ const Dashboard = () => {
                 </div>
             </motion.div>
 
-            {/* SECTION 2: FILTERS & LIST */}
+            {/* LIST SECTION */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                     <h3 className="text-xl font-bold text-slate-800">
                         {isAdmin ? "System-Wide Grievances" : isManager ? "Department Grievances" : "My Recent Grievances"}
                     </h3>
                     
-                    {/* Search & Filter Bar */}
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <div className="relative flex-1 md:w-64">
                             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -168,7 +203,6 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* List */}
                 <div className="space-y-3">
                     {filteredComplaints.length === 0 ? (
                         <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
@@ -179,69 +213,99 @@ const Dashboard = () => {
                             <p className="text-sm text-slate-500 mt-1">Try adjusting filters or create a new one.</p>
                         </div>
                     ) : (
-                        filteredComplaints.map((c) => (
-                            <motion.div 
-                                key={c.complaintId} 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }}
-                                className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
-                            >
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    {/* ID & Title Info */}
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 font-bold text-xs flex-shrink-0">
-                                            #{c.complaintId}
+                        filteredComplaints.map((c) => {
+                            const isGlowing = hasUnreadActivity(c.complaintId);
+
+                            return (
+                                <motion.div 
+                                    key={c.complaintId} 
+                                    initial={{ opacity: 0 }} 
+                                    animate={{ opacity: 1 }}
+                                    onClick={() => openViewModal(c)}
+                                    className={`p-4 rounded-xl border transition-all duration-300 group cursor-pointer relative overflow-hidden bg-white ${
+                                        isGlowing 
+                                            ? 'border-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.25)] ring-1 ring-violet-400 z-10' 
+                                            : 'border-slate-100 shadow-sm hover:shadow-md'
+                                    }`}
+                                >
+                                    {/* Status indicator line on left */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                        c.status === 'Pending' ? 'bg-orange-400' : 
+                                        c.status === 'Resolved' ? 'bg-emerald-400' : 
+                                        'bg-blue-400'
+                                    }`}></div>
+
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-3">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 font-bold text-xs flex-shrink-0">
+                                                #{c.complaintId}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 group-hover:text-violet-600 transition-colors flex items-center gap-2">
+                                                    {c.title}
+                                                    {isGlowing && <span className="flex h-2 w-2 rounded-full bg-violet-600 animate-pulse"></span>}
+                                                </h4>
+                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                    {canManage ? `By ${c.employeeName || 'Unknown'}` : c.departmentName} • {new Date(c.createdAt).toLocaleDateString()}
+                                                </p>
+                                                <p className="text-sm text-slate-600 mt-1 line-clamp-1">
+                                                    {c.description}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 className="font-bold text-slate-800 group-hover:text-violet-600 transition-colors">
-                                                {c.title}
-                                            </h4>
-                                            <p className="text-xs text-slate-500 mt-0.5">
-                                                {canManage ? `By ${c.employeeName || 'Unknown'}` : c.departmentName} • {new Date(c.createdAt).toLocaleDateString()}
-                                            </p>
-                                            <p className="text-sm text-slate-600 mt-1 line-clamp-1">
-                                                {c.description}
-                                            </p>
-                                        </div>
-                                    </div>
 
-                                    {/* Status & Actions */}
-                                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50">
-                                        <StatusBadge status={c.status} />
-                                        
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => openViewModal(c)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-
-                                            {!canManage && c.status === 'Pending' && (
-                                                <>
-                                                    <button onClick={() => openEditModal(c)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Edit">
-                                                        <Pencil className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => initiateCancel(c.complaintId)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </>
-                                            )}
-
-                                            {canManage && (
-                                                <button onClick={() => openUpdateModal(c)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ml-1">
-                                                    <CheckSquare className="w-4 h-4" />
+                                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                                            <StatusBadge status={c.status} />
+                                            
+                                            <div className="flex items-center gap-1">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); openViewModal(c); }} 
+                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                                                    title="View Details"
+                                                >
+                                                    <Eye className="w-4 h-4" />
                                                 </button>
-                                            )}
+
+                                                {!canManage && c.status === 'Pending' && (
+                                                    <>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); openEditModal(c); }} 
+                                                            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" 
+                                                            title="Edit"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); initiateCancel(c.complaintId); }} 
+                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+
+                                                {canManage && (
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); openUpdateModal(c); }} 
+                                                        className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ml-1"
+                                                    >
+                                                        <CheckSquare className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                {c.managerRemarks && (
-                                    <div className="mt-3 pl-14 text-xs text-slate-500 flex items-start gap-2">
-                                        <MessageSquare className="w-3 h-3 mt-0.5" />
-                                        <span className="italic">"{c.managerRemarks}"</span>
-                                    </div>
-                                )}
-                            </motion.div>
-                        ))
+                                    
+                                    {c.managerRemarks && (
+                                        <div className="mt-3 pl-16 text-xs text-slate-500 flex items-start gap-2">
+                                            <MessageSquare className="w-3 h-3 mt-0.5" />
+                                            <span className="italic">"{c.managerRemarks}"</span>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            );
+                        })
                     )}
                 </div>
             </motion.div>

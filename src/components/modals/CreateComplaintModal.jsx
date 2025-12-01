@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
-import api from '../../api/axios';
+import api from '../../api/axios.js';
 
 const CreateComplaintModal = ({ isOpen, onClose, onComplaintCreated }) => {
     const [title, setTitle] = useState('');
@@ -39,7 +39,6 @@ const CreateComplaintModal = ({ isOpen, onClose, onComplaintCreated }) => {
         }
     };
 
-    // Use Portal to render at document.body level
     return ReactDOM.createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -62,23 +61,49 @@ const CreateComplaintModal = ({ isOpen, onClose, onComplaintCreated }) => {
                                 <h3 className="text-lg font-bold text-slate-800">New Grievance</h3>
                                 <button onClick={onClose}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
                             </div>
+                            
                             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
-                                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none" required />
+                                    <input 
+                                        type="text" 
+                                        value={title} 
+                                        onChange={e => setTitle(e.target.value)} 
+                                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none" 
+                                        required 
+                                    />
                                 </div>
+                                
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">Department</label>
-                                    <select value={dept} onChange={e => setDept(e.target.value)} className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none" required>
+                                    <select 
+                                        value={dept} 
+                                        onChange={e => setDept(e.target.value)} 
+                                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none" 
+                                        required
+                                    >
                                         <option value="">Select...</option>
-                                        {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.name}</option>)}
+                                        {departments.map(d => (
+                                            <option key={d.departmentId} value={d.departmentId}>{d.name}</option>
+                                        ))}
                                     </select>
                                 </div>
+                                
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
-                                    <textarea value={desc} onChange={e => setDesc(e.target.value)} rows="4" className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none resize-none" required />
+                                    <textarea 
+                                        value={desc} 
+                                        onChange={e => setDesc(e.target.value)} 
+                                        rows="4" 
+                                        className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-violet-500/20 outline-none resize-none" 
+                                        required 
+                                    />
                                 </div>
-                                <button disabled={isSubmitting} className="w-full py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2 disabled:opacity-70">
+
+                                <button 
+                                    disabled={isSubmitting} 
+                                    className="w-full py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2 disabled:opacity-70 mt-2"
+                                >
                                     {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                     {isSubmitting ? "Submitting..." : "Submit Complaint"}
                                 </button>
