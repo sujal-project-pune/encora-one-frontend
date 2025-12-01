@@ -1,0 +1,6 @@
+            await emailjs.send(
+                'service_t9dusjc',  // Replace with your Service ID
+                'template_nrq43tl', // Replace with your Template ID
+                templateParams, 
+                'KGF2e296803-07r4r'   // Replace with your Public Key
+            );
