@@ -1,89 +1,73 @@
 import React from 'react';
-import { 
-  Code2, Database, Server, Cloud, Zap, Layout, Box, ShieldCheck, Globe, Cpu 
+import { motion } from 'framer-motion';
+import {
+  Code2, Database, Server, Cloud, Zap, Layout, Box, ShieldCheck
 } from 'lucide-react';
-
+ 
 const techs = [
-  { name: ".NET 8", icon: Server, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-  { name: "React", icon: Code2, color: "text-cyan-400", bg: "bg-cyan-400/10", border: "border-cyan-400/20" },
-  { name: "SQL Server", icon: Database, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
-  { name: "SignalR", icon: Zap, color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20" },
-  { name: "Tailwind", icon: Layout, color: "text-teal-400", bg: "bg-teal-400/10", border: "border-teal-400/20" },
-  { name: "Azure", icon: Cloud, color: "text-blue-600", bg: "bg-blue-600/10", border: "border-blue-600/20" },
-  { name: "EF Core", icon: Box, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
-  { name: "JWT Auth", icon: ShieldCheck, color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20" },
+  { name: ".NET 8", icon: Server, color: "text-purple-500" },
+  { name: "React", icon: Code2, color: "text-cyan-400" },
+  { name: "SQL Server", icon: Database, color: "text-red-500" },
+  { name: "SignalR", icon: Zap, color: "text-blue-400" },
+  { name: "Tailwind", icon: Layout, color: "text-teal-400" },
+  // { name: "Azure", icon: Cloud, color: "text-blue-600" },
+  { name: "EF Core", icon: Box, color: "text-indigo-500" },
+  { name: "JWT Auth", icon: ShieldCheck, color: "text-yellow-400" },
 ];
-
-const LogoCard = ({ tech }) => {
-  const Icon = tech.icon;
-  return (
-    <div 
-      className={`
-        flex items-center gap-4 px-8 py-4 mx-4 rounded-2xl 
-        border ${tech.border} ${tech.bg} backdrop-blur-md
-        transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.1)]
-        group cursor-default select-none min-w-[200px] justify-center
-      `}
-    >
-      <Icon className={`w-8 h-8 ${tech.color} transition-transform group-hover:rotate-12`} strokeWidth={1.5} />
-      <span className="text-xl font-bold text-white/90 tracking-wide">{tech.name}</span>
-    </div>
-  );
-};
-
-const MarqueeRow = ({ items, direction = 'left', speed = '40s' }) => {
-  return (
-    <div className="relative flex overflow-hidden py-4 group">
-      {/* Gradient Masks for smooth fade in/out */}
-      <div className="absolute left-0 top-0 bottom-0 w-20 md:w-40 z-10 bg-gradient-to-r from-black to-transparent pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 md:w-40 z-10 bg-gradient-to-l from-black to-transparent pointer-events-none" />
-
-      <div 
-        className="flex flex-nowrap gap-0"
-        style={{
-          animation: `marquee-${direction} ${speed} linear infinite`,
-        }}
-      >
-        {/* Double the items to ensure seamless loop */}
-        {[...items, ...items, ...items, ...items].map((tech, idx) => (
-          <LogoCard key={`${tech.name}-${idx}`} tech={tech} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
+ 
 const LogoWall = () => {
+  // Tripling the array ensures smooth continuity on ultra-wide screens
+  const marqueeItems = [...techs, ...techs, ...techs];
+ 
   return (
-    <section className="relative w-full py-20 overflow-hidden bg-black/50 backdrop-blur-sm border-y border-white/5">
-      <style>
-        {`
-          @keyframes marquee-left {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          @keyframes marquee-right {
-            0% { transform: translateX(-50%); }
-            100% { transform: translateX(0); }
-          }
-        `}
-      </style>
-
-      <div className="container mx-auto px-4 mb-12 text-center">
-        <span className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium tracking-widest uppercase">
+    <section className="py-24 bg-[#050505] border-y border-white/5 overflow-hidden">
+      <div className="container mx-auto px-4 mb-16 text-center">
+        <h3 className="text-xl font-mono text-gray-500 uppercase tracking-[0.2em]">
           Powering The Platform
-        </span>
-        <h3 className="text-3xl md:text-4xl font-bold text-white mt-6 mb-4">
-          Built with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Next-Gen Tech</span>
         </h3>
       </div>
-
-      <div className="flex flex-col gap-8 rotate-[-2deg] scale-105 opacity-80 hover:opacity-100 transition-opacity duration-500">
-        <MarqueeRow items={techs} direction="left" speed="60s" />
-        <MarqueeRow items={[...techs].reverse()} direction="right" speed="60s" />
+ 
+      <div className="relative w-full overflow-hidden">
+        {/* Left/Right Fade Masks */}
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10 pointer-events-none" />
+ 
+        <div className="flex">
+          <motion.div
+            initial={{ x: 0 }}
+            animate={{ x: "-33.33%" }}
+            transition={{
+              duration: 40,
+              ease: "linear",
+              repeat: Infinity
+            }}
+            className="flex flex-none gap-16 pr-16 items-center"
+          >
+            {marqueeItems.map((tech, index) => {
+              const Icon = tech.icon;
+              return (
+                <div
+                  key={index}
+                  className="group flex flex-col items-center gap-4 justify-center min-w-[120px] cursor-default"
+                >
+                  <div className={`p-4 rounded-2xl bg-white/[0.03] border border-white/5 group-hover:border-white/10 transition-colors duration-300 group-hover:bg-white/[0.05]`}>
+                    <Icon
+                      size={40}
+                      className={`${tech.color} opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 filter group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]`}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-500 group-hover:text-white transition-colors duration-300">
+                    {tech.name}
+                  </span>
+                </div>
+              );
+            })}
+          </motion.div>
+        </div>
       </div>
     </section>
   );
 };
-
+ 
 export default LogoWall;
+ 

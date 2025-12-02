@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Home, Info, Sparkles, LogIn } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// ✅ Import the logo (Adjust path if needed)
+import logo from '../../assets/logo.png'; 
+
 /**
  * MagneticNavItem Component
- * Handles the individual "pull" physics of each link.
  */
 const MagneticNavItem = ({ children, active, onClick }) => {
   const itemRef = useRef(null);
@@ -53,7 +55,6 @@ const MagneticNavItem = ({ children, active, onClick }) => {
 
 /**
  * GlassNavbar Component
- * A fixed, floating navbar with spotlight and glassmorphism effects.
  */
 const GlassNavbar = () => {
   const navRef = useRef(null);
@@ -93,28 +94,37 @@ const GlassNavbar = () => {
     { name: 'Login', icon: LogIn, path: '/login' },
   ];
 
+  // ✅ IMPROVED: Logo Click Handler
+  const handleLogoClick = () => {
+    setActiveTab('Home'); // Visually set Home as active
+    
+    if (location.pathname === '/') {
+        // If already on home, just scroll to top smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        // If elsewhere, navigate home and reset scroll
+        navigate('/');
+        window.scrollTo(0, 0);
+    }
+  };
+
   const handleNavigation = (item) => {
     setActiveTab(item.name);
     
-    // Handle Feature Anchor Link
     if (item.path.startsWith('/#')) {
         const targetId = item.path.replace('/#', '');
         
-        // If we are NOT on the home page, go there first
         if (location.pathname !== '/') {
             navigate('/');
-            // Wait for navigation to complete before scrolling
             setTimeout(() => {
                 const element = document.getElementById(targetId);
                 if (element) element.scrollIntoView({ behavior: 'smooth' });
             }, 300);
         } else {
-            // We are already on home page, just scroll
             const element = document.getElementById(targetId);
             if (element) element.scrollIntoView({ behavior: 'smooth' });
         }
     } else {
-        // Standard Navigation
         navigate(item.path);
     }
   };
@@ -141,6 +151,23 @@ const GlassNavbar = () => {
             background: `radial-gradient(600px circle at ${spotlightPos.x}px ${spotlightPos.y}px, rgba(255,255,255,0.06), transparent 40%)`
           }}
         />
+
+        {/* Logo Section */}
+        <div className="flex items-center pl-2 pr-1">
+            <button 
+                onClick={handleLogoClick} // ✅ Uses the improved handler
+                className="hover:scale-110 transition-transform duration-200"
+            >
+                <img 
+                    src={logo} 
+                    alt="Logo" 
+                    className="w-10 h-10 object-contain" 
+                />
+            </button>
+        </div>
+
+        {/* Vertical Divider */}
+        <div className="w-px h-6 bg-white/10 mx-1 rounded-full" />
 
         {/* Navigation Items */}
         {navItems.map((item) => {

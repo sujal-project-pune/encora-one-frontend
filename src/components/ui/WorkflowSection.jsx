@@ -1,133 +1,182 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { FilePlus, UserCheck, BarChart3, MessageSquare, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { FilePlus, UserCheck, BarChart3, MessageSquare, ChevronRight, ChevronDown } from 'lucide-react';
 
 const steps = [
   {
     id: 1,
-    title: "Raise Grievance",
-    description: "Employees log issues directly via the portal with attachments and priority levels.",
+    title: "Raise Ticket",
+    description: "Submit issues instantly with priority tagging.",
     icon: FilePlus,
-    color: "bg-blue-500",
-    glow: "shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+    color: "from-blue-500 to-blue-600",
+    shadow: "group-hover:shadow-blue-500/20",
+    iconColor: "text-blue-400",
+    arrowColor: "text-blue-500", // Color for the glowing arrow
+    glowColor: "drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"
   },
   {
     id: 2,
     title: "Manager Review",
-    description: "Department heads receive instant alerts, review details, and assign tasks.",
+    description: "Auto-routing to heads for quick approval.",
     icon: UserCheck,
-    color: "bg-violet-500",
-    glow: "shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+    color: "from-violet-500 to-violet-600",
+    shadow: "group-hover:shadow-violet-500/20",
+    iconColor: "text-violet-400",
+    arrowColor: "text-violet-500",
+    glowColor: "drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]"
   },
   {
     id: 3,
-    title: "Admin Oversight",
-    description: "Admins monitor SLAs and system-wide performance through real-time dashboards.",
+    title: "System Oversight",
+    description: "Real-time SLA tracking for admins.",
     icon: BarChart3,
-    color: "bg-pink-500",
-    glow: "shadow-[0_0_20px_rgba(236,72,153,0.5)]"
+    color: "from-fuchsia-500 to-fuchsia-600",
+    shadow: "group-hover:shadow-fuchsia-500/20",
+    iconColor: "text-fuchsia-400",
+    arrowColor: "text-fuchsia-500",
+    glowColor: "drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]"
   },
   {
     id: 4,
-    title: "Collaborate & Resolve",
-    description: "Seamless chat integration allows everyone to discuss and close tickets faster.",
+    title: "Resolution",
+    description: "Collaborate and close via built-in chat.",
     icon: MessageSquare,
-    color: "bg-emerald-500",
-    glow: "shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+    color: "from-emerald-500 to-emerald-600",
+    shadow: "group-hover:shadow-emerald-500/20",
+    iconColor: "text-emerald-400",
+    arrowColor: "text-emerald-500",
+    glowColor: "drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"
   }
 ];
 
-const WorkflowSection = () => {
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start center", "end center"]
-  });
-
-  const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-
+// Sub-component for the glowing animated arrows
+const GlowingArrow = ({ color, glow, isVertical = false }) => {
   return (
-    <section ref={containerRef} className="relative py-32 bg-[#050505] overflow-hidden">
+    <div className={`flex ${isVertical ? 'flex-col -space-y-4' : '-space-x-4'} items-center justify-center`}>
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          animate={{ opacity: [0.1, 1, 0.1] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            delay: i * 0.2, // Staggered delay creates the "traveling" effect
+            ease: "easeInOut"
+          }}
+          className={`${color} ${glow}`}
+        >
+          {isVertical ? <ChevronDown size={32} strokeWidth={3} /> : <ChevronRight size={32} strokeWidth={3} />}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+const WorkflowSection = () => {
+  return (
+    <section className="py-24 bg-[#050505] text-white overflow-hidden relative">
+      
+      {/* Background Ambient Glows */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
+         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-900/10 rounded-full blur-[120px]" />
+      </div>
+
       <div className="container mx-auto px-6 relative z-10">
         
-        <div className="text-center mb-24">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-violet-200 to-pink-200">
-             How It Works
-          </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            A seamless flow from problem to resolution.
-          </p>
+        {/* Header */}
+        <div className="text-center mb-20">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-5xl font-bold mb-4"
+          >
+            Streamlined <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-violet-400">Process</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-slate-400 max-w-xl mx-auto"
+          >
+            From initiation to completion, our intelligent workflow keeps your team in sync.
+          </motion.p>
         </div>
 
-        <div className="relative max-w-4xl mx-auto">
+        {/* Steps Container */}
+        <div className="flex flex-col lg:flex-row items-stretch justify-center gap-4 relative">
           
-          {/* CENTRAL BEAM LINE (Background Track) */}
-          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-1 bg-white/5 -translate-x-1/2 rounded-full" />
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <React.Fragment key={step.id}>
+                
+                {/* --- CARD --- */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`
+                    group relative flex-1 min-w-[240px]
+                    bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden
+                    hover:-translate-y-2 transition-all duration-300
+                    ${step.shadow} hover:shadow-2xl hover:border-white/20
+                    z-10
+                  `}
+                >
+                  {/* Top Color Bar */}
+                  <div className={`h-1.5 w-full bg-gradient-to-r ${step.color}`} />
 
-          {/* ANIMATED BEAM LINE (Filling up) */}
-          <motion.div 
-            style={{ height: lineHeight }}
-            className="absolute left-4 md:left-1/2 top-0 w-1 bg-gradient-to-b from-blue-500 via-violet-500 to-emerald-500 -translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(124,58,237,0.5)] z-0"
-          />
-
-          <div className="space-y-16 md:space-y-24">
-            {steps.map((step, index) => {
-              const isEven = index % 2 === 0;
-              const Icon = step.icon;
-              
-              return (
-                <div key={step.id} className={`relative flex items-center ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                  
-                  {/* Timeline Dot */}
-                  <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-[#0a0a0a] border-4 border-[#1a1a1a] z-10 flex items-center justify-center">
-                    <div className={`w-4 h-4 rounded-full ${step.color} ${step.glow}`} />
-                  </div>
-
-                  {/* Content Card */}
-                  <div className={`ml-16 md:ml-0 md:w-1/2 ${isEven ? 'md:pr-16 md:text-right' : 'md:pl-16 md:text-left'}`}>
-                    <motion.div
-                      initial={{ opacity: 0, x: isEven ? -50 : 50 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      transition={{ duration: 0.6, delay: 0.1 }}
-                      className="group relative p-6 bg-white/[0.03] border border-white/10 rounded-2xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-300"
-                    >
-                      {/* Glow Effect behind card */}
-                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 bg-gradient-to-r ${step.color.replace('bg-', 'from-')} to-transparent rounded-2xl blur-xl -z-10`} />
-
-                      <div className={`flex items-center gap-4 mb-3 ${isEven ? 'md:flex-row-reverse' : 'flex-row'}`}>
-                        <div className={`p-3 rounded-lg ${step.color} bg-opacity-20 text-white border border-white/10`}>
-                          <Icon size={24} />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white">{step.title}</h3>
+                  <div className="p-8 flex flex-col items-center text-center lg:items-start lg:text-left h-full">
+                    
+                    {/* Icon Container */}
+                    <div className="mb-6 relative">
+                      <div className="absolute inset-0 bg-white/5 blur-xl rounded-full" />
+                      <div className={`relative w-14 h-14 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center ${step.iconColor}`}>
+                        <Icon size={28} />
                       </div>
                       
-                      <p className="text-gray-400 leading-relaxed">
-                        {step.description}
-                      </p>
-                    </motion.div>
+                      {/* Step Number Badge */}
+                      <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#111] border border-white/10 flex items-center justify-center text-xs font-bold text-slate-500">
+                        0{step.id}
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl font-bold mb-3 text-white group-hover:text-white transition-colors">
+                      {step.title}
+                    </h3>
+                    
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      {step.description}
+                    </p>
                   </div>
                   
-                  {/* Empty spacer for the other side */}
-                  <div className="hidden md:block md:w-1/2" />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  {/* Hover Glow Effect inside card */}
+                  <div className={`absolute inset-0 bg-gradient-to-b ${step.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300 pointer-events-none`} />
+                </motion.div>
 
-        {/* Final Checkmark */}
-        <div className="flex justify-center mt-20 relative z-10">
-          <motion.div 
-            initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
-            className="w-16 h-16 bg-[#050505] border-4 border-emerald-500/30 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]"
-          >
-            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-          </motion.div>
-        </div>
+                {/* --- ANIMATED GLOWING ARROWS --- */}
+                {index < steps.length - 1 && (
+                  <div className="flex items-center justify-center py-4 lg:py-0 relative z-0">
+                    {/* Desktop Horizontal Arrows */}
+                    <div className="hidden lg:block mx-2">
+                        <GlowingArrow color={step.arrowColor} glow={step.glowColor} isVertical={false} />
+                    </div>
 
+                    {/* Mobile Vertical Arrows */}
+                    <div className="lg:hidden my-2">
+                        <GlowingArrow color={step.arrowColor} glow={step.glowColor} isVertical={true} />
+                    </div>
+                  </div>
+                )}
+                
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
